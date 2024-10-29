@@ -1,5 +1,4 @@
 import java.util.*;
-
 public class Main {
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -12,7 +11,7 @@ public class Main {
         int[] dest = {keymakerX, keymakerY};
         int[] src = {0, 0};
 
-        Algorithms.A_star(gameBoard, src, dest, scan);
+        Algorithms.A_star(gameBoard, src, dest);
     }
 }
 
@@ -52,6 +51,14 @@ class Cell {
 
     public String getPerception() {
         return perception;
+    }
+
+    public int getParent_i() {
+        return parent_i;
+    }
+
+    public int getParent_j() {
+        return parent_j;
     }
 }
 
@@ -147,8 +154,8 @@ class GameBoard {
 }
 
 class Algorithms {
-    public static void A_star(GameBoard gameBoard, int[] src, int[] dest, Scanner scanner) {
-        aStarAlgo(gameBoard, src, dest, scanner);
+    public static void A_star(GameBoard gameBoard, int[] src, int[] dest) {
+        aStarAlgo(gameBoard, src, dest);
     }
 
     private static boolean isValid(int col, int row, int size) {
@@ -190,8 +197,23 @@ class Algorithms {
         System.out.println();
     }
 
+    private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
+        // Начинаем с текущей клетки и идем по родительским ссылкам до первой соседней с предыдущей
+        while (!areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
+            System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
+            readMapResponse(gameBoard);
+            prevCol = cellDetails[prevCol][prevRow].getParent_i();
+            prevRow = cellDetails[prevCol][prevRow].getParent_j();
+        }
+    }
 
-    private static void aStarAlgo(GameBoard gameBoard, int[] src, int[] dest, Scanner scanner) {
+    private static boolean areConnected(AStarCell current, int prevCol, int prevRow) {
+        return current.getParent_i() == prevCol && current.getParent_j() == prevRow;
+    }
+
+
+
+    private static void aStarAlgo(GameBoard gameBoard, int[] src, int[] dest) {
 
         int size = gameBoard.getBoardCells().length;
         AStarCell[][] cellDetails = (AStarCell[][]) gameBoard.getBoardCells();
@@ -210,7 +232,7 @@ class Algorithms {
         boolean[][] closedList = new boolean[size][size];
         boolean foundDest = false;
 
-
+        int prevRow = -1, prevCol = -1;
 
         while (!openList.isEmpty()) {
 
@@ -219,6 +241,10 @@ class Algorithms {
 
             int i = current.getI();
             int j = current.getJ();
+
+            if (!areConnected(current, prevCol, prevRow)) {
+                traceBackToNeighbor(gameBoard, cellDetails, i, j, prevCol, prevRow);
+            }
 
             if (isDestination(gameBoard, i, j, dest)) {
                 tracePath(cellDetails, dest);
@@ -408,6 +434,8 @@ class Algorithms {
                         }
                 }
             }
+            prevCol = i;
+            prevRow = j;
 
 
             // remove current cell from open list
