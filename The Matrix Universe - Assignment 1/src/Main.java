@@ -11,10 +11,11 @@ public class Main {
         int[] dest = {keymakerX, keymakerY};
         int[] src = {0, 0};
 
+        //Algorithms.Backtracking(gameBoard, src, dest);
         Algorithms.A_star(gameBoard, src, dest);
+
     }
 }
-
 
 class Cell {
     int parent_i, parent_j;
@@ -198,10 +199,13 @@ class Algorithms {
     }
 
     private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
-        // Начинаем с текущей клетки и идем по родительским ссылкам до первой соседней с предыдущей
+
         while (!areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
             System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
             readMapResponse(gameBoard);
+            if (prevCol == -1 && prevRow == -1) {
+                return;
+            }
             prevCol = cellDetails[prevCol][prevRow].getParent_i();
             prevRow = cellDetails[prevCol][prevRow].getParent_j();
         }
@@ -314,9 +318,10 @@ class Algorithms {
                         cellDetails[i + 1][j].setParent_i(i);
                         cellDetails[i + 1][j].setParent_j(j);
                         System.out.println("m " + (i+1) + " " + j);
+                        readMapResponse(gameBoard);
                         System.out.println(
                                 "e " + cellDetails[i][j].finalCost);
-                        readMapResponse(gameBoard);
+
                         /*tracePath(cellDetails, dest);*/
                         foundDest = true;
                         return;
