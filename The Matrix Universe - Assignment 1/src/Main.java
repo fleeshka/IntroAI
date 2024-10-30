@@ -1,4 +1,6 @@
 import java.util.*;
+
+
 public class Main {
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -7,21 +9,31 @@ public class Main {
         int keymakerX = scan.nextInt();
         int keymakerY = scan.nextInt();
 
-        GameBoard gameBoard = new GameBoard(true, keymakerX, keymakerY);
+        // GameBoard gameBoardAStar = new GameBoard(true, keymakerX, keymakerY);
+
+        GameBoard gameBoardBacktracking = new GameBoard(false, keymakerX, keymakerY);
         int[] dest = {keymakerX, keymakerY};
         int[] src = {0, 0};
 
-        Algorithms.Backtracking(gameBoard, src, dest);
+        Algorithms.Backtracking(gameBoardBacktracking, src, dest);
+        int minPath = gameBoardBacktracking.getMinPath();
+        if (minPath == Integer.MAX_VALUE) {
+            System.out.println("e -1");
+        } else {
+            System.out.println("e " + minPath);
+        }
+
         //Algorithms.A_star(gameBoard, src, dest);
 
     }
 }
 
 class Cell {
-    int parent_i, parent_j;
-    int i, j;
-    String perception;
-    boolean visited = false;
+    private int parent_i, parent_j;
+    private int i, j;
+    private String perception;
+    private boolean visited = false;
+    private int distance = Integer.MAX_VALUE;
 
     Cell(int i, int j) {
         this.parent_i = 0;
@@ -69,6 +81,14 @@ class Cell {
 
     public int getParent_j() {
         return parent_j;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
     }
 }
 
@@ -121,6 +141,7 @@ class GameBoard {
     private Cell[][] boardCells;
     private Cell initialNode;
     private Cell finalNode;
+    private int minPath = Integer.MAX_VALUE;
 
     public GameBoard(boolean isAStar, int keymakerX, int keymakerY) {
 
@@ -161,362 +182,24 @@ class GameBoard {
     public Cell[][] getBoardCells() {
         return boardCells;
     }
+
+    public void setMinPath(int minPath) {
+        this.minPath = minPath;
+    }
+
+    public int getMinPath() {
+        return minPath;
+    }
 }
+
+
 
 class Algorithms {
 
     private static int[][] moveDirections = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
-
     public static void Backtracking(GameBoard gameBoard, int[] src, int[] dest) {
-        List<int[]> currentPath = new ArrayList<>();
-        List<int[]> shortestPath = new ArrayList<>();
-
-        System.out.println("m " + src[0] + " " + src[1]);
-        readMapResponse(gameBoard);
-
-        backtrackingAlgo(gameBoard, src[0], src[1], dest, currentPath, shortestPath);
-
-        if (!shortestPath.isEmpty()) {
-
-            System.out.println("e " + shortestPath.size());
-        } else {
-            System.out.println("e -1");
-        }
-    }
-
-    private static void backtrackingAlgo(GameBoard gameBoard, int col, int row, int[] dest,
-                                         List<int[]> currentPath, List<int[]> shortestPath) {
-        if (isDestination(gameBoard, col, row, dest)) {
-            if (shortestPath.isEmpty() || currentPath.size() < shortestPath.size()) {
-                shortestPath.clear();
-                shortestPath.addAll(currentPath);
-            }
-            return;
-        }
-
-        Cell currentCell = gameBoard.getBoardCells()[col][row];
-        currentCell.setVisited(true);
-        currentPath.add(new int[]{col, row});
-
-        for (int[] direction : moveDirections) {
-            int newCol = col + direction[0];
-            int newRow = row + direction[1];
-
-            if (isValid(newCol, newRow, gameBoard.getBoardCells().length) && isUnBlocked(gameBoard, newCol, newRow)) {
-                Cell neighbor = gameBoard.getBoardCells()[newCol][newRow];
-                if (!neighbor.isVisited()) {
-                    System.out.println("m " + newCol + " " + newRow);
-                    readMapResponse(gameBoard);
-
-                    backtrackingAlgo(gameBoard, newCol, newRow, dest, currentPath, shortestPath);
-
-                    neighbor.setVisited(false);
-                }
-            }
-        }
-
-        currentPath.remove(currentPath.size() - 1);
-        currentCell.setVisited(false);
-    }
-
-    public static void A_star(GameBoard gameBoard, int[] src, int[] dest) {
-        aStarAlgo(gameBoard, src, dest);
-    }
-
-    private static boolean isValid(int col, int row, int size) {
-        return (row >= 0) && (row < size) && (col >= 0) && (col < size);
-    }
-
-    private static boolean isUnBlocked(GameBoard gameBoard, int col, int row) {
-        Cell[][] boardCells = gameBoard.getBoardCells();
-        return boardCells[col][row].perception == null || !boardCells[col][row].perception.equals("blocked");
-    }
-
-    private static boolean isDestination(GameBoard gameBoard, int col, int row, int[] dest) {
-        // Cell cell = gameBoard.getBoardCells()[col][row];
-        if (col == dest[0] && row == dest[1] ) {
-            //return cell.getPerception() != null && cell.getPerception().equals("goal");
-            return true;
-        }
-        return false;
-    }
-
-    private static int manhattanDistance(int col, int row, int[] dest) {
-        return Math.abs(col - dest[0]) + Math.abs(row - dest[1]);
-    }
-
-
-    /*
-    private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
-
-        while (!areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
-            System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
-            readMapResponse(gameBoard);
-            if (prevCol == -1 && prevRow == -1) {
-                return;
-            }
-            prevCol = cellDetails[prevCol][prevRow].getParent_i();
-            prevRow = cellDetails[prevCol][prevRow].getParent_j();
-        }
-    }
-    */
-
-    private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
-        while (prevCol >= 0 && prevRow >= 0 && !areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
-            System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
-            readMapResponse(gameBoard);
-
-            if (prevCol == -1 && prevRow == -1) {
-                return;
-            }
-
-            // Обновляем prevCol и prevRow только если их значения валидны
-            int newPrevCol = cellDetails[prevCol][prevRow].getParent_i();
-            int newPrevRow = cellDetails[prevCol][prevRow].getParent_j();
-            if (newPrevCol >= 0 && newPrevRow >= 0) {
-                prevCol = newPrevCol;
-                prevRow = newPrevRow;
-            } else {
-                break;
-            }
-        }
-    }
-
-
-    private static boolean areConnected(AStarCell current, int prevCol, int prevRow) {
-        return current.getParent_i() == prevCol && current.getParent_j() == prevRow;
-    }
-
-
-
-    private static void aStarAlgo(GameBoard gameBoard, int[] src, int[] dest) {
-
-        int size = gameBoard.getBoardCells().length;
-        AStarCell[][] cellDetails = (AStarCell[][]) gameBoard.getBoardCells();
-
-
-        PriorityQueue<AStarCell> openList = new PriorityQueue<>();
-
-        gameBoard.getBoardCells()[src[0]][src[1]].setParent_i(-1);
-        gameBoard.getBoardCells()[src[0]][src[1]].setParent_j(-1);
-        cellDetails[src[0]][src[1]].setCurrentCost(0);
-        cellDetails[src[0]][src[1]].setEstimatedCost(manhattanDistance(src[0], src[1], dest));
-        cellDetails[src[0]][src[1]].setFinalCost(cellDetails[src[0]][src[1]].getCurrentCost() + cellDetails[src[0]][src[1]].getEstimatedCost());
-        openList.add(cellDetails[0][0]);
-
-        //closedList initialization
-        boolean[][] closedList = new boolean[size][size];
-        boolean foundDest = false;
-
-        int prevRow = -1, prevCol = -1;
-
-        while (!openList.isEmpty()) {
-
-            AStarCell current = openList.poll();
-            // get i and j from current cell in cellDetails
-
-            int i = current.getI();
-            int j = current.getJ();
-
-            if (!areConnected(current, prevCol, prevRow)) {
-                traceBackToNeighbor(gameBoard, cellDetails, i, j, prevCol, prevRow);
-            }
-
-            closedList[i][j] = true;
-
-            // Move to the current cell and read response from the map
-            System.out.println("m " + i + " " + j);
-
-            // update the map with the new perception
-            readMapResponse(gameBoard);
-
-            //check all the neighbours
-            // go up
-            if (isValid(i - 1, j, size)) {
-                //System.out.println("check up" + (i - 1) + " " + j);
-                //check if cell is destination
-                if (isDestination(gameBoard, i - 1, j, dest)) {
-                    cellDetails[i - 1][j].setParent_i(i);
-                    cellDetails[i - 1][j].setParent_j(j);
-                    System.out.println("m " + (i-1) + " " + j);
-                    readMapResponse(gameBoard);
-                    System.out.println(
-                            "e " + cellDetails[i][j].finalCost);
-                    /*tracePath(cellDetails, dest);*/
-                    foundDest = true;
-                    return;
-                } else if (!closedList[i - 1][j] && isUnBlocked(gameBoard, i - 1, j)) {
-                    // update cell if its final cost is higher
-                    if (cellDetails[i - 1][j].getFinalCost() > cellDetails[i][j].getFinalCost()
-                            || cellDetails[i - 1][j].getFinalCost() == Double.POSITIVE_INFINITY) {
-                        // update cell details
-                        // set previous cell as parent
-
-                        cellDetails[i - 1][j].setParent_i(i);
-                        cellDetails[i - 1][j].setParent_j(j);
-
-                        // increase the current cost (g(x)) -- > (parent cost + 1)
-                        cellDetails[i - 1][j].setCurrentCost(cellDetails[i][j].getCurrentCost() + 1);
-                        // calculate estimated cost (h(x)) -- > manhattan distance
-                        cellDetails[i - 1][j].setEstimatedCost(manhattanDistance(i - 1, j, dest));
-                        // update final cost
-                        cellDetails[i - 1][j].setFinalCost(cellDetails[i - 1][j].getCurrentCost()
-                                + cellDetails[i - 1][j].getEstimatedCost());
-
-                        /*System.out.println("ADD " + (i - 1) + " " + j + " cell to open list  \n" + cellDetails[i - 1][j].currentCost
-                                + " -- current cost " + cellDetails[i - 1][j].estimatedCost + " -- estimated cost "
-                                + cellDetails[i - 1][j].finalCost );*/
-
-
-                        // add cell to the open list
-                        openList.add(cellDetails[i - 1][j]);
-
-                    }
-                }
-            }
-
-                // go right
-            if (isValid(i + 1, j, size)) {
-                //System.out.println("check down" + (i + 1) + " " + j);
-                //check if cell is destination
-                if (isDestination(gameBoard, i + 1, j, dest)) {
-                        cellDetails[i + 1][j].setParent_i(i);
-                        cellDetails[i + 1][j].setParent_j(j);
-                        System.out.println("m " + (i+1) + " " + j);
-                        readMapResponse(gameBoard);
-                        System.out.println(
-                                "e " + cellDetails[i][j].finalCost);
-
-                        /*tracePath(cellDetails, dest);*/
-                        foundDest = true;
-                        return;
-                    } else if (!closedList[i + 1][j] && isUnBlocked(gameBoard, i + 1, j)) {
-                    // update cell if its final cost is higher
-                    if (cellDetails[i + 1][j].getFinalCost() > cellDetails[i][j].getFinalCost()
-                                || cellDetails[i + 1][j].getFinalCost() == Double.POSITIVE_INFINITY) {
-                            // update cell details
-                            // set previous cell as parent
-                            cellDetails[i + 1][j].setParent_i(i);
-                            cellDetails[i + 1][j].setParent_j(j);
-
-                            // increase the current cost (g(x)) -- > (parent cost + 1)
-                            cellDetails[i + 1][j].setCurrentCost(cellDetails[i][j].getCurrentCost() + 1);
-                            // calculate estimated cost (h(x)) -- > manhattan distance
-                            cellDetails[i + 1][j].setEstimatedCost(manhattanDistance(i + 1, j, dest));
-                            // update final cost
-                            cellDetails[i + 1][j].setFinalCost(cellDetails[i + 1][j].getCurrentCost()
-                                    + cellDetails[i + 1][j].getEstimatedCost());
-
-                            /*System.out.println("ADD " + (i + 1) + " " + j + " cell to open list  \n" + cellDetails[i + 1][j].currentCost
-                                    + " -- current cost " + cellDetails[i + 1][j].estimatedCost + " -- estimated cost "
-                                    + cellDetails[i + 1][j].finalCost );*/
-
-                            // add cell to the open list
-                            openList.add(cellDetails[i + 1][j]);
-
-                        }
-                }
-            }
-
-                // go to up
-            if (isValid(i, j - 1, size)) {
-                //System.out.println("check left" + i + " " + (j - 1));
-                //check if cell is destination
-                if (isDestination(gameBoard,i, j - 1, dest)) {
-                        cellDetails[i][j - 1].setParent_i(i);
-                        cellDetails[i][j - 1].setParent_j(j);
-                        System.out.println("m " + (i) + " " + (j - 1));
-                        readMapResponse(gameBoard);
-                        System.out.println(
-                                "e " + cellDetails[i][j].finalCost);
-                        /*tracePath(cellDetails, dest);*/
-                        foundDest = true;
-                        return;
-                    } else if (!closedList[i][j - 1] && isUnBlocked(gameBoard, i, j - 1)) {
-                    // update cell if its final cost is higher
-                    if (cellDetails[i][j - 1].getFinalCost() > cellDetails[i][j].getFinalCost()
-                                || cellDetails[i][j - 1].getFinalCost() == Double.POSITIVE_INFINITY) {
-                            // update cell details
-                            // set previous cell as parent
-                            cellDetails[i][j - 1].setParent_i(i);
-                            cellDetails[i][j - 1].setParent_j(j);
-
-                            // increase the current cost (g(x)) -- > (parent cost + 1)
-                            cellDetails[i][j - 1].setCurrentCost(cellDetails[i][j].getCurrentCost() + 1);
-                            // calculate estimated cost (h(x)) -- > manhattan distance
-                            cellDetails[i][j - 1].setEstimatedCost(manhattanDistance(i, j - 1, dest));
-                            // update final cost
-                            cellDetails[i][j - 1].setFinalCost(cellDetails[i][j - 1].getCurrentCost()
-                                    + cellDetails[i][j - 1].getEstimatedCost());
-
-                            /*System.out.println("ADD " + i + " " + (j - 1) + " cell to open list  \n" + cellDetails[i][j - 1].currentCost
-                                    + " -- current cost " + cellDetails[i][j - 1].estimatedCost + " -- estimated cost "
-                                    + cellDetails[i][j - 1].finalCost );*/
-
-
-                            // add cell to the open list
-                            openList.add(cellDetails[i][j - 1]);
-
-                        }
-                }
-            }
-
-            // go to  DOWN
-            if (isValid(i, j + 1, size)) {
-                //System.out.println("check right" + i + " " + (j + 1));
-                //check if cell is destination
-                if (isDestination(gameBoard, i, j + 1, dest)) {
-                        cellDetails[i][j + 1].setParent_i(i);
-                        cellDetails[i][j + 1].setParent_j(j);
-                        System.out.println("m " + i + " " + (j + 1));
-                        readMapResponse(gameBoard);
-                        System.out.println(
-                                "e " + cellDetails[i][j].finalCost);
-
-                        /*tracePath(cellDetails, dest);*/
-                        foundDest = true;
-                        return;
-                    } else if (!closedList[i][j + 1] && isUnBlocked(gameBoard, i, j + 1)) {
-                    // update cell if its final cost is higher
-                    if (cellDetails[i][j + 1].getFinalCost()> cellDetails[i][j].getFinalCost()
-                                || cellDetails[i][j + 1].getFinalCost() == Double.POSITIVE_INFINITY) {
-                            // update cell details
-                            // set previous cell as parent
-                            cellDetails[i][j + 1].setParent_i(i);
-                            cellDetails[i][j + 1].setParent_j(j);
-
-                            // increase the current cost (g(x)) -- > (parent cost + 1)
-                            cellDetails[i][j + 1].setCurrentCost(cellDetails[i][j].getCurrentCost() + 1);
-                            // calculate estimated cost (h(x)) -- > manhattan distance
-                            cellDetails[i][j + 1].setEstimatedCost(manhattanDistance(i, j + 1, dest));
-                            // update final cost
-                            cellDetails[i][j + 1].setFinalCost(cellDetails[i][j + 1].getCurrentCost()
-                                    + cellDetails[i][j + 1].getEstimatedCost());
-
-                            /*System.out.println("ADD " + i + " " + (j + 1) + " cell to open list  \n" + cellDetails[i][j + 1].currentCost
-                                    + " -- current cost " + cellDetails[i][j + 1].estimatedCost + " -- estimated cost "
-                                    + cellDetails[i][j + 1].finalCost );*/
-
-
-                            // add cell to the open list
-                            openList.add(cellDetails[i][j + 1]);
-
-                        }
-                }
-            }
-            prevCol = i;
-            prevRow = j;
-
-
-            // remove current cell from open list
-            openList.remove(cellDetails[i][j]);
-            // mark current cell as closed
-            closedList[i][j] = true;
-        }
-        if (!foundDest ) {
-            System.out.println("e -1");
-        }
+        backtracking(gameBoard, src[0], src[1], dest, 0);
     }
 
     public static void readMapResponse(GameBoard gameBoard) {
@@ -530,5 +213,56 @@ class Algorithms {
         }
     }
 
+    private static boolean isValid(GameBoard gameBoard, int col, int row) {
+        return col >= 0 && col < gameBoard.getBoardCells().length && row >= 0 && row < gameBoard.getBoardCells().length
+                && (gameBoard.getBoardCells()[col][row].getPerception() == null
+                || gameBoard.getBoardCells()[col][row].getPerception().equals("goal"))
+                && !gameBoard.getBoardCells()[col][row].isVisited();
+    }
+
+    private static void backtracking(GameBoard gameBoard, int col, int row, int[] dest, int depth) {
+        Cell current = gameBoard.getBoardCells()[col][row];
+
+        System.out.println("m " + current.getI() + " " + current.getJ());
+        readMapResponse(gameBoard);
+
+
+        // base
+        if (current.getI() == dest[0] && current.getJ() == dest[1]) {
+            // update minPath
+            gameBoard.setMinPath(Math.min(gameBoard.getMinPath(), depth));
+            current.setVisited(false);
+            return;
+        }
+
+        // body
+
+        // update -- don't visit cells that have been visited with the shortest path
+        if (gameBoard.getMinPath() <= depth || depth >= current.getDistance()) {
+            return;
+        }
+
+
+        // mark cell as visited
+        current.setVisited(true);
+        current.setDistance(Math.min(gameBoard.getMinPath(), depth));
+
+        // check all possible directions
+        for (int[] direction : moveDirections) {
+            int nextCol = col + direction[0];
+            int nextRow = row + direction[1];
+            if (isValid(gameBoard, nextCol, nextRow)) {
+                backtracking(gameBoard, nextCol, nextRow, dest, depth + 1);
+                System.out.println("m " + current.getI() + " " + current.getJ());
+                readMapResponse(gameBoard);
+            }
+        }
+
+
+        // unmark cell
+        current.setVisited(false);
+    }
+
 }
+
 
