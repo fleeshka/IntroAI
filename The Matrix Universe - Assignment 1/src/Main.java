@@ -11,8 +11,8 @@ public class Main {
         int[] dest = {keymakerX, keymakerY};
         int[] src = {0, 0};
 
-        //Algorithms.Backtracking(gameBoard, src, dest);
-        Algorithms.A_star(gameBoard, src, dest);
+        Algorithms.Backtracking(gameBoard, src, dest);
+        //Algorithms.A_star(gameBoard, src, dest);
 
     }
 }
@@ -21,6 +21,7 @@ class Cell {
     int parent_i, parent_j;
     int i, j;
     String perception;
+    boolean visited = false;
 
     Cell(int i, int j) {
         this.parent_i = 0;
@@ -28,6 +29,14 @@ class Cell {
         this.i = i;
         this.j = j;
         this.perception = null;
+    }
+
+    public boolean isVisited() {
+        return visited;
+    }
+
+    public void setVisited(boolean visited) {
+        this.visited = visited;
     }
 
     public int getI() {
@@ -136,7 +145,7 @@ class GameBoard {
 
         initialNode = boardCells[0][0];
         finalNode = boardCells[keymakerX][keymakerY];
-        updateCell(keymakerX, keymakerY, "keymaker");
+        updateCell(keymakerX, keymakerY, "goal");
     }
 
     public void updateCell(int x, int y, String perception) {
@@ -155,6 +164,62 @@ class GameBoard {
 }
 
 class Algorithms {
+
+    private static int[][] moveDirections = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+
+
+    public static void Backtracking(GameBoard gameBoard, int[] src, int[] dest) {
+        List<int[]> currentPath = new ArrayList<>();
+        List<int[]> shortestPath = new ArrayList<>();
+
+        System.out.println("m " + src[0] + " " + src[1]);
+        readMapResponse(gameBoard);
+
+        backtrackingAlgo(gameBoard, src[0], src[1], dest, currentPath, shortestPath);
+
+        if (!shortestPath.isEmpty()) {
+
+            System.out.println("e " + shortestPath.size());
+        } else {
+            System.out.println("e -1");
+        }
+    }
+
+    private static void backtrackingAlgo(GameBoard gameBoard, int col, int row, int[] dest,
+                                         List<int[]> currentPath, List<int[]> shortestPath) {
+        if (isDestination(gameBoard, col, row, dest)) {
+            if (shortestPath.isEmpty() || currentPath.size() < shortestPath.size()) {
+                shortestPath.clear();
+                shortestPath.addAll(currentPath);
+            }
+            return;
+        }
+
+        Cell currentCell = gameBoard.getBoardCells()[col][row];
+        currentCell.setVisited(true);
+        currentPath.add(new int[]{col, row});
+
+        for (int[] direction : moveDirections) {
+            int newCol = col + direction[0];
+            int newRow = row + direction[1];
+
+            if (isValid(newCol, newRow, gameBoard.getBoardCells().length) && isUnBlocked(gameBoard, newCol, newRow)) {
+                Cell neighbor = gameBoard.getBoardCells()[newCol][newRow];
+                if (!neighbor.isVisited()) {
+                    System.out.println("m " + newCol + " " + newRow);
+                    readMapResponse(gameBoard);
+
+                    backtrackingAlgo(gameBoard, newCol, newRow, dest, currentPath, shortestPath);
+
+                    neighbor.setVisited(false);
+                }
+            }
+        }
+
+        currentPath.remove(currentPath.size() - 1);
+        currentCell.setVisited(false);
+    }
+
     public static void A_star(GameBoard gameBoard, int[] src, int[] dest) {
         aStarAlgo(gameBoard, src, dest);
     }
@@ -169,8 +234,12 @@ class Algorithms {
     }
 
     private static boolean isDestination(GameBoard gameBoard, int col, int row, int[] dest) {
-        Cell cell = gameBoard.getBoardCells()[col][row];
-        return cell.getPerception() != null && cell.getPerception().equals("goal");
+        // Cell cell = gameBoard.getBoardCells()[col][row];
+        if (col == dest[0] && row == dest[1] ) {
+            //return cell.getPerception() != null && cell.getPerception().equals("goal");
+            return true;
+        }
+        return false;
     }
 
     private static int manhattanDistance(int col, int row, int[] dest) {
@@ -178,26 +247,7 @@ class Algorithms {
     }
 
 
-    private static void tracePath(Cell[][] cellDetails, int[] dest) {
-        System.out.println("The Path is ");
-        int row = dest[1];
-        int col = dest[0];
-
-        List<int[]> pathList = new ArrayList<>();
-        while (!(cellDetails[row][col].parent_i == row && cellDetails[row][col].parent_j == col)) {
-            pathList.add(new int[]{row, col});
-            int temp_row = cellDetails[row][col].parent_i;
-            int temp_col = cellDetails[row][col].parent_j;
-            row = temp_row;
-            col = temp_col;
-        }
-        pathList.add(new int[]{row, col});
-        Collections.reverse(pathList);
-
-        pathList.forEach(p -> System.out.print("-> (" + p[0] + ", " + p[1] + ")"));
-        System.out.println();
-    }
-
+    /*
     private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
 
         while (!areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
@@ -210,6 +260,29 @@ class Algorithms {
             prevRow = cellDetails[prevCol][prevRow].getParent_j();
         }
     }
+    */
+
+    private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
+        while (prevCol >= 0 && prevRow >= 0 && !areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
+            System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
+            readMapResponse(gameBoard);
+
+            if (prevCol == -1 && prevRow == -1) {
+                return;
+            }
+
+            // Обновляем prevCol и prevRow только если их значения валидны
+            int newPrevCol = cellDetails[prevCol][prevRow].getParent_i();
+            int newPrevRow = cellDetails[prevCol][prevRow].getParent_j();
+            if (newPrevCol >= 0 && newPrevRow >= 0) {
+                prevCol = newPrevCol;
+                prevRow = newPrevRow;
+            } else {
+                break;
+            }
+        }
+    }
+
 
     private static boolean areConnected(AStarCell current, int prevCol, int prevRow) {
         return current.getParent_i() == prevCol && current.getParent_j() == prevRow;
@@ -248,13 +321,6 @@ class Algorithms {
 
             if (!areConnected(current, prevCol, prevRow)) {
                 traceBackToNeighbor(gameBoard, cellDetails, i, j, prevCol, prevRow);
-            }
-
-            if (isDestination(gameBoard, i, j, dest)) {
-                tracePath(cellDetails, dest);
-                foundDest = true;
-                System.out.println("Reached destination!");
-                return;
             }
 
             closedList[i][j] = true;
