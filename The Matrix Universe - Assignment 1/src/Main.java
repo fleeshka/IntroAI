@@ -34,15 +34,15 @@ public class Main {
 
         // Backtracking Algorithm
         
-        GameBoard gameBoardBacktracking = new GameBoard(false, keymakerX, keymakerY);
-
-        Algorithms.Backtracking(gameBoardBacktracking, src, dest);
-        int minPath = gameBoardBacktracking.getMinPath();
-        if (minPath == Integer.MAX_VALUE) {
-            System.out.println("e -1");
-        } else {
-            System.out.println("e " + minPath);
-        }
+//        GameBoard gameBoardBacktracking = new GameBoard(false, keymakerX, keymakerY);
+//
+//        Algorithms.Backtracking(gameBoardBacktracking, src, dest);
+//        int minPath = gameBoardBacktracking.getMinPath();
+//        if (minPath == Integer.MAX_VALUE) {
+//            System.out.println("e -1");
+//        } else {
+//            System.out.println("e " + minPath);
+//        }
     }
 
     public int runAStar(int perceptionMode, int keymakerX, int keymakerY, String[] board) {

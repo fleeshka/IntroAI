@@ -128,7 +128,7 @@ public class TestRunner {
                 writer.write(String.format("Backtracking Algorithm:\nExecution Time: %d ns\tExpected: %d\tActual: %d\tResult: %s\n",
                         timeBacktracking, testCase.expectedResult, resultBacktracking, isPassedBacktracking ? "Passed" : "Failed"));
 
-                writer.write("+-----------------------------------------------------+\n");}
+                writer.write("+----------------------------------------------------------------+\n");}
 
 
             writer.write("\n+------------------------+-------------------+-------------------+\n");
@@ -155,10 +155,8 @@ public class TestRunner {
     }
 
     public static void main(String[] args) {
-        String testFilePath = "src/test.txt";       // файл с тестами
-        String resultFilePath = "src/results.txt";   // файл для записи результатов
-
-        // Запуск тестов и статистический анализ
+        String testFilePath = "src/test.txt";
+        String resultFilePath = "src/results.txt";
         runTestsAndAnalyze(testFilePath, resultFilePath);
     }
 }
