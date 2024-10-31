@@ -17,16 +17,23 @@ public class Main {
 
         int[] dest = {keymakerX, keymakerY};
         int[] src = {0, 0};
+        
+
+        String[] board = new String[9];
+        for (int i = 0; i < 9; i++) {
+            board[i] = scan.next();
+        }
 
         scan.close();
 
+
         // A* Algorithm
-        GameBoard gameBoardAStar = new GameBoard(true, keymakerX, keymakerY);
+        GameBoard gameBoardAStar = new GameBoard(true, keymakerX, keymakerY, board);
         Algorithms.A_star(gameBoardAStar, src, dest);
 
 
         // Backtracking Algorithm
-        /*
+        
         GameBoard gameBoardBacktracking = new GameBoard(false, keymakerX, keymakerY);
 
         Algorithms.Backtracking(gameBoardBacktracking, src, dest);
@@ -36,9 +43,25 @@ public class Main {
         } else {
             System.out.println("e " + minPath);
         }
+    }
 
-        */
+    public int runAStar(int perceptionMode, int keymakerX, int keymakerY, String[] board) {
+        GameBoard gameBoardAStar = new GameBoard(true, keymakerX, keymakerY, board);
+        int aStarPath = Algorithms.A_star(gameBoardAStar, new int[]{0, 0}, new int[]{keymakerX, keymakerY});
+        return aStarPath;
+    }
 
+    public int runBacktracking(int perceptionMode, int keymakerX, int keymakerY, String[] board) {
+
+        GameBoard BacktrackingGameBoard = new GameBoard(false, keymakerX, keymakerY, board);
+
+        Algorithms.Backtracking(BacktrackingGameBoard, new int[]{0, 0}, new int[]{keymakerX, keymakerY});
+
+        int BacktrackingPath = BacktrackingGameBoard.getMinPath();
+        if (BacktrackingPath == Integer.MAX_VALUE) {
+            BacktrackingPath = -1;
+        }
+        return BacktrackingPath;
     }
 }
 
@@ -191,30 +214,23 @@ class GameBoard {
      * @param keymakerX X-coordinate of the goal
      * @param keymakerY Y-coordinate of the goal
      */
-    public GameBoard(boolean isAStar, int keymakerX, int keymakerY) {
-
-        if (isAStar) {
-            boardCells = new AStarCell[SIZE][SIZE];
-            for (int i = 0; i < SIZE; i++) {
-                for (int j = 0; j < SIZE; j++) {
-                    boardCells[i][j] = new AStarCell(i, j);
-                }
-            }
-            // set -1 as parent of initial node
-            boardCells[0][0].setParent_i(-1);
-            boardCells[0][0].setParent_j(-1);
-        } else {
-            boardCells = new Cell[SIZE][SIZE];
-            for (int i = 0; i < SIZE; i++) {
-                for (int j = 0; j < SIZE; j++) {
-                    boardCells[i][j] = new Cell(i, j);
+    public GameBoard(boolean isAStar, int keymakerX, int keymakerY, String[] board) {
+        boardCells = isAStar ? new AStarCell[SIZE][SIZE] : new Cell[SIZE][SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                boardCells[i][j] = isAStar ? new AStarCell(i, j) : new Cell(i, j);
+                char cell = board[i].charAt(j);
+                if (cell == 'K') {
+                    boardCells[i][j].setPerception("goal");
+                } else if (cell == 'P' || cell == 'S' || cell == 'A') {
+                    boardCells[i][j].setPerception("blocked");
+                } else {
+                    boardCells[i][j].setPerception(null);
                 }
             }
         }
-
         initialNode = boardCells[0][0];
         finalNode = boardCells[keymakerX][keymakerY];
-        updateCell(keymakerX, keymakerY, "goal");
     }
 
     /**
@@ -259,7 +275,7 @@ class Algorithms {
      */
     private static int[][] moveDirections = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
-    
+
     /**
      * Runs the Backtracking algorithm to find the shortest path from the start to the goal.
      *
@@ -276,8 +292,8 @@ class Algorithms {
      * it is not blocked, and it has not been visited before.
      *
      * @param gameBoard the game board to check in
-     * @param col the column of the cell to check
-     * @param row the row of the cell to check
+     * @param col       the column of the cell to check
+     * @param row       the row of the cell to check
      * @return true -- cell is valid, false -- otherwise
      */
     private static boolean isValid(GameBoard gameBoard, int col, int row) {
@@ -294,16 +310,16 @@ class Algorithms {
      * Updates: algorithm checks cell if it doesn't have other shortest path to destination cell for reducing time complexity.
      *
      * @param gameBoard the game board to search in
-     * @param col X-coordinate of the current cell
-     * @param row Y-coordinate of the current cell
-     * @param dest the coordinates of the destination cell
-     * @param depth the current path length from the start cell
+     * @param col       X-coordinate of the current cell
+     * @param row       Y-coordinate of the current cell
+     * @param dest      the coordinates of the destination cell
+     * @param depth     the current path length from the start cell
      */
     private static void backtracking(GameBoard gameBoard, int col, int row, int[] dest, int depth) {
         Cell current = gameBoard.getBoardCells()[col][row];
 
-        System.out.println("m " + current.getI() + " " + current.getJ());
-        readMapResponse(gameBoard);
+        //System.out.println("m " + current.getI() + " " + current.getJ());
+        //readMapResponse(gameBoard);
         if (current.getI() == dest[0] && current.getJ() == dest[1]) {
             gameBoard.setMinPath(Math.min(gameBoard.getMinPath(), depth));
             current.setVisited(false);
@@ -319,8 +335,8 @@ class Algorithms {
             int nextRow = row + direction[1];
             if (isValid(gameBoard, nextCol, nextRow)) {
                 backtracking(gameBoard, nextCol, nextRow, dest, depth + 1);
-                System.out.println("m " + current.getI() + " " + current.getJ());
-                readMapResponse(gameBoard);
+                //System.out.println("m " + current.getI() + " " + current.getJ());
+                //readMapResponse(gameBoard);
             }
         }
         current.setVisited(false);
@@ -329,16 +345,16 @@ class Algorithms {
 
     /**
      * Runs the Backtracking algorithm to find the shortest path from the start to the goal.
-     * 
+     *
      * @param gameBoard the game board to search in
-     * @param src the coordinates of the start cell
-     * @param dest the coordinates of the destination cell
+     * @param src       the coordinates of the start cell
+     * @param dest      the coordinates of the destination cell
      */
-    public static void A_star(GameBoard gameBoard, int[] src, int[] dest) {
-        aStarAlgo(gameBoard, src, dest);
+    public static int A_star(GameBoard gameBoard, int[] src, int[] dest) {
+        return aStarAlgo(gameBoard, src, dest);
     }
 
-    
+
     /**
      * Executes the A* algorithm to find the shortest path from the start cell to the destination cell.
      * Initializes the open list for unexplored cells and closed list for explored cells.
@@ -351,7 +367,7 @@ class Algorithms {
      * @param src       the coordinates of the start cell
      * @param dest      the coordinates of the destination cell
      */
-    private static void aStarAlgo(GameBoard gameBoard, int[] src, int[] dest) {
+    private static int aStarAlgo(GameBoard gameBoard, int[] src, int[] dest) {
 
         int size = gameBoard.getBoardCells().length;
         AStarCell[][] cellDetails = (AStarCell[][]) gameBoard.getBoardCells();
@@ -382,8 +398,8 @@ class Algorithms {
                 }
 
                 closedList[i][j] = true;
-                System.out.println("m " + i + " " + j);
-                readMapResponse(gameBoard);
+                //System.out.println("m " + i + " " + j);
+                //readMapResponse(gameBoard);
                 int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
                 for (int[] dir : directions) {
@@ -394,12 +410,13 @@ class Algorithms {
                         if (isDestination(gameBoard, newCol, newRow, dest)) {
                             cellDetails[newCol][newRow].setParent_i(i);
                             cellDetails[newCol][newRow].setParent_j(j);
-                            System.out.println("m " + newCol + " " + newRow);
-                            readMapResponse(gameBoard);
-                            System.out.println("e " + cellDetails[i][j].finalCost);
+                            // System.out.println("m " + newCol + " " + newRow);
+                            // readMapResponse(gameBoard);
+//                            System.out.println("e " + cellDetails[i][j].finalCost);
                             foundDest = true;
-                            return;
-                        } else if ( isUnBlocked(gameBoard, newCol, newRow)) {
+
+                            return cellDetails[i][j].finalCost;
+                        } else if (isUnBlocked(gameBoard, newCol, newRow)) {
                             if (cellDetails[newCol][newRow].getFinalCost() > cellDetails[i][j].getFinalCost()
                                     || cellDetails[newCol][newRow].getFinalCost() == Double.POSITIVE_INFINITY) {
 
@@ -423,10 +440,12 @@ class Algorithms {
                 closedList[i][j] = true;
             }
         }
-        if (!foundDest ) {
-            System.out.println("e -1");
+        if (!foundDest) {
+            return -1;
         }
+        return -1;
     }
+
 
 
     /**
@@ -482,8 +501,8 @@ class Algorithms {
      */
     private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
         while (isValid(gameBoard, prevCol, prevRow) && prevCol >= 0 && prevRow >= 0 && !areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
-            System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
-            readMapResponse(gameBoard);
+            /*System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
+            readMapResponse(gameBoard);*/
             if (prevCol == -1 && prevRow == -1) {
                 return;
             }
