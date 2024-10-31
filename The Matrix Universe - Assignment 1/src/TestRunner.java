@@ -155,8 +155,8 @@ public class TestRunner {
     }
 
     public static void main(String[] args) {
-        String testFilePath = "src/test.txt";
-        String resultFilePath = "src/results.txt";
+        String testFilePath = "src/unsolvable_maps.txt";
+        String resultFilePath = "src/unsolvable_maps_results.txt";
         runTestsAndAnalyze(testFilePath, resultFilePath);
     }
 }

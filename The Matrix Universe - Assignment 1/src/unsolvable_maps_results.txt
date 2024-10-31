@@ -1,0 +1,31 @@
+Test #1
+A* Algorithm:
+Execution Time: 2456600 ns	Expected: -1	Actual: -1	Result: Passed
+Backtracking Algorithm:
+Execution Time: 55500 ns	Expected: -1	Actual: -1	Result: Passed
++----------------------------------------------------------------+
+Test #2
+A* Algorithm:
+Execution Time: 174300 ns	Expected: -1	Actual: -1	Result: Passed
+Backtracking Algorithm:
+Execution Time: 70900 ns	Expected: -1	Actual: -1	Result: Passed
++----------------------------------------------------------------+
+Test #3
+A* Algorithm:
+Execution Time: 43800 ns	Expected: -1	Actual: -1	Result: Passed
+Backtracking Algorithm:
+Execution Time: 19500 ns	Expected: -1	Actual: -1	Result: Passed
++----------------------------------------------------------------+
+
++------------------------+-------------------+-------------------+
+| Statistic              | A* Algorithm      | Backtracking      |
++------------------------+-------------------+-------------------+
+| Mean Execution Time    |      891566.67 ns |       48633.33 ns |
+| Median Execution Time  |      174300.00 ns |       55500.00 ns |
+| Mode Execution Time    |        43800 ns   |        70900 ns   |
+| Standard Deviation     |     1107927.36 ns |       21538.39 ns |
+| Wins                   |             3     |             3     |
+| Losses                 |             0     |             0     |
+| Win Percentage         |         100.00 %  |         100.00 %  |
+| Loss Percentage        |           0.00 %  |           0.00 %  |
++------------------------+-------------------+-------------------+
