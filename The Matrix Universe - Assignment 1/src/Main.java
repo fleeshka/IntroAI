@@ -274,7 +274,7 @@ class Algorithms {
 
 
     private static void traceBackToNeighbor(GameBoard gameBoard, AStarCell[][] cellDetails, int currentCol, int currentRow, int prevCol, int prevRow) {
-        while (isValid(gameBoard, prevCol, prevRow) && prevCol >= 0 && prevRow >= 0 && !areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
+        while (prevCol >= 0 && prevRow >= 0 && !areConnected(cellDetails[currentCol][currentRow], prevCol, prevRow)) {
             System.out.println("m " + cellDetails[prevCol][prevRow].getParent_i() + " " + cellDetails[prevCol][prevRow].getParent_j());
             readMapResponse(gameBoard);
             if (prevCol == -1 && prevRow == -1) {
@@ -296,6 +296,142 @@ class Algorithms {
         return current.getParent_i() == prevCol && current.getParent_j() == prevRow;
     }
 
+
+
+
+
+    private static void printPathFromCellToCommonParentAndBack(GameBoard gameBoard,AStarCell[][] cellDetails, AStarCell cell1, AStarCell cell2) {
+        // Найти общую родительскую клетку
+        AStarCell commonParent = findCommonParent(cellDetails, cell1, cell2);
+        if (commonParent == null) {
+            System.out.println("No common parent found.");
+            return;
+        }
+
+        // Вывести путь от cell1 до commonParent
+        printPathFromCellToParent( gameBoard,cellDetails, cell1, commonParent);
+
+        // Вывести путь от commonParent до cell2
+        printPathFromParentToCell( gameBoard,cellDetails, commonParent, cell2);
+    }
+
+
+    private static AStarCell findCommonParent(GameBoard gameBoard, AStarCell[][] cellDetails, AStarCell fromCell, AStarCell toCell) {
+
+        // current cell is cell that whe want achieve fromCell
+        Set<AStarCell> path1 = new HashSet<>();
+        Set<AStarCell> path2 = new HashSet<>();
+
+        // find path from (fromCell) to root
+        AStarCell current = fromCell;
+        while (current.getParent_i() != -1 || current.getParent_j() != -1) {
+            path1.add(current);
+            current = cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+        path1.add(current);
+
+        // find path from (toCell) to root
+        current = toCell;
+        while (current.getParent_i() != -1 || current.getParent_j() != -1) {
+            path2.add(current);
+            current = cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+        path2.add(current);
+
+        // find intersection
+        path1.retainAll(path2);
+
+        // Возвращаем первого общего родителя
+        for (AStarCell cell : path1) {
+            return cell;
+        }
+
+        // Если общий родитель не найден, возвращаем null
+        return null;
+    }
+
+    private static AStarCell findCommonParent(AStarCell[][] cellDetails, AStarCell cell1, AStarCell cell2) {
+        // Создаем множества для хранения путей от каждой клетки до начальной
+        Set<AStarCell> path1 = new HashSet<>();
+        Set<AStarCell> path2 = new HashSet<>();
+
+        // Проходим по родительским ссылкам от cell1 до начальной клетки
+        AStarCell current = cell1;
+        while (current != null) {
+            path1.add(current);
+            if (current.getParent_i() == -1 || current.getParent_j() == -1) {
+                break;
+            }
+            current =  cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+
+        // Проходим по родительским ссылкам от cell2 до начальной клетки
+        current = cell2;
+        while (current != null) {
+            path2.add(current);
+            if (current.getParent_i() == -1 || current.getParent_j() == -1) {
+                break;
+            }
+            current = cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+
+        // Находим пересечение путей
+        path1.retainAll(path2);
+
+        // Возвращаем первого общего родителя
+        for (AStarCell cell : path1) {
+            return cell;
+        }
+
+        // Если общий родитель не найден, возвращаем null
+        return null;
+    }
+
+    private static void printPathFromCellToParent(GameBoard gameBoard, AStarCell[][] cellDetails, AStarCell cell, AStarCell parent) {
+        AStarCell current = cellDetails[cell.getParent_i()][cell.getParent_j()];
+        while (current != parent) {
+            System.out.println("m " + current.getI() + " " + current.getJ());
+            readMapResponse(gameBoard);
+            if (current.getParent_i() == -1 || current.getParent_j() == -1) {
+                break;
+            }
+            current =  cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+    }
+
+    private static void printPathFromParentToCell(GameBoard gameBoard, AStarCell[][] cellDetails, AStarCell parent, AStarCell cell) {
+        AStarCell current = cell;
+        List<AStarCell> path = new ArrayList<>();
+
+        // Проходим по родительским ссылкам от cell до parent
+        while (current != parent) {
+            path.add(current);
+
+            if (current.getParent_i() == -1 || current.getParent_j() == -1) {
+                break;
+            }
+            current = cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+        path.add(parent); // Добавляем parent в путь
+
+        // Выводим путь в обратном порядке (от parent до cell)
+        for (int i = path.size() - 1; i > 0; i--) {
+            AStarCell c = path.get(i);
+            System.out.println("m " + c.getI() + " " + c.getJ());
+            readMapResponse(gameBoard);
+        }
+    }
+
+    private static void markPathAsUnvisited(GameBoard gameBoard, AStarCell[][] cellDetails, AStarCell cell, AStarCell parent) {
+        AStarCell current = cellDetails[cell.getParent_i()][cell.getParent_j()];
+        while (current != parent) {
+            current.setVisited(false);
+            if (current.getParent_i() == -1 || current.getParent_j() == -1) {
+                break;
+            }
+            current = cellDetails[current.getParent_i()][current.getParent_j()];
+        }
+    }
 
 
     private static void aStarAlgo(GameBoard gameBoard, int[] src, int[] dest) {
@@ -320,33 +456,53 @@ class Algorithms {
         int prevRow = -1, prevCol = -1;
 
         while (!openList.isEmpty()) {
+            /*System.out.println("start new loop");
+
+            System.out.println("Open list before loop: ");
+            for (AStarCell cell : openList) {
+                System.out.println("Cell: " + cell.getI() + " " + cell.getJ()  + " current "
+                        + cell.getCurrentCost() + " estimated " + cell.getEstimatedCost() + " final " + cell.getFinalCost());
+            }*/
+
 
             AStarCell current = openList.poll();
             // get i and j from current cell in cellDetails
+
+            /*System.out.println("Take cell " + current.getI() + " " + current.getJ());
+*/
 
             int i = current.getI();
             int j = current.getJ();
 
             if (isValid(gameBoard, i, j)) {
 
-
-                if (!areConnected(current, prevCol, prevRow)) {
+                /*
+                if (!areConnected(current, prevCol, prevRow) ) {
                     traceBackToNeighbor(gameBoard, cellDetails, i, j, prevCol, prevRow);
                 }
+                */
+                
+                if (!areConnected(current, prevCol, prevRow)) {
+                    printPathFromCellToCommonParentAndBack(gameBoard,cellDetails, cellDetails[prevCol][prevRow], current);
+
+                    markPathAsUnvisited(gameBoard, cellDetails, cellDetails[prevCol][prevRow], current);
+                } else {
+                    System.out.println("m " + i + " " + j);
+
+                    // update the map with the new perception
+                    readMapResponse(gameBoard);
+                }
+                
 
                 closedList[i][j] = true;
 
-                // Move to the current cell and read response from the map
-                System.out.println("m " + i + " " + j);
 
-                // update the map with the new perception
-                readMapResponse(gameBoard);
 
                 //check all the neighbours
                 // go up
-                int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-                for (int[] dir : directions) {
+
+                for (int[] dir : moveDirections) {
                     int newCol = i + dir[0];
                     int newRow = j + dir[1];
 
@@ -359,7 +515,7 @@ class Algorithms {
                             System.out.println("e " + cellDetails[i][j].finalCost);
                             foundDest = true;
                             return;
-                        } else if (!closedList[newCol][newRow] && isUnBlocked(gameBoard, newCol, newRow)) {
+                        } else if ( closedList[newCol][newRow] == false && isUnBlocked(gameBoard, newCol, newRow)) {
                             if (cellDetails[newCol][newRow].getFinalCost() > cellDetails[i][j].getFinalCost()
                                     || cellDetails[newCol][newRow].getFinalCost() == Double.POSITIVE_INFINITY) {
 
