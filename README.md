@@ -1,3 +1,5 @@
-# IntroAI 1^{st} Assignment — The Matrix 
-Introduction to Artificial Intelligence course, Fall 2024, Innopolis University 
-A* and Backtracking algorithms realization to solve the pathfinding problem 
+# IntroAI 1<sup>st</sup> Assignment — The Matrix
+
+Introduction to Artificial Intelligence Course, Fall 2024, Innopolis University
+
+Implementation of A* and Backtracking algorithms to solve a pathfinding problem.
